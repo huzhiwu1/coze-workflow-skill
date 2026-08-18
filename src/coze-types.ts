@@ -12,7 +12,7 @@
 // ============================================
 
 export interface CozeClientConfig {
-  /** Coze 平台基础 URL（如 https://coze.example.com） */
+  /** Coze 平台基础 URL（如 https://coze.dev1.dachensky.com） */
   baseUrl: string;
   /** 会话 Cookie session_key 值 */
   sessionKey: string;

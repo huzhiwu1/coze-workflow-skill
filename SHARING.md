@@ -3,16 +3,7 @@
 > 目标用户：没有 agent-coze-workflow 项目、没有 OpenClaw 环境的开发者/同事。
 > 只需 Node 18+，一次扫码，即可操作 Coze 工作流和数据库。
 
-## 前置准备
-
-部署前，管理员需提供 Coze 平台连接配置（参见 `.env.example`）：
-```bash
-export COZE_ORIGIN=https://coze.example.com
-export COZE_SSO_ORIGIN=https://sso.example.com
-export COZE_CLIENT_ID=your-client-id
-export COZE_WECOM_APPID=your-wecom-appid
-export COZE_WECOM_AGENTID=your-wecom-agentid
-```
+平台连接信息已内置（私有化部署），**使用者零配置，直接扫码登录即可**。
 
 ## 方式一：CLI（推荐人类用户）
 

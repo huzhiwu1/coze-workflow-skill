@@ -2,7 +2,7 @@
  * CozeClient - Coze 平台 API 客户端
  *
  * 职责：
- * 封装对私有 Coze Studio 平台（coze.example.com）的 API 调用，
+ * 封装对私有 Coze Studio 平台（coze.dev1.dachensky.com）的 API 调用，
  * 包括工作流创建、编辑锁、schema 拉取、保存、试运行等完整生命周期操作。
  *
  * 流程：

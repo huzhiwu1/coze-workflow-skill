@@ -5,7 +5,7 @@ description: Coze 工作流确定性能力（扫码登录 + 创建/读取/保存
 
 # Coze Workflow Skill
 
-操作私有 Coze 平台（coze.example.com）工作流的确定性能力封装：
+操作私有 Coze 平台（coze.dev1.dachensky.com）工作流的确定性能力封装：
 **用户扫码绑定自己的账号 → agent 直接执行工作流操作**（不需要用户复制任何 token/URL）。
 
 ## 何时使用
@@ -106,9 +106,9 @@ coze db-import <database_id> <tos_uri> --wait      # 4. 导入（校验+提交+�
 
 ## 关键实现细节
 
-- 登录 URL 构造（与 coze 前端一致）：state = base64url(`?client_id=YOUR_COZE_CLIENT_ID&response_type=code&redirect_uri=<coze>/sign?redirect=%2F&scope=read&state=<随机数>&application=opencoze&provider=企业微信&method=signup`)
-- 企业微信：appid `YOUR_COZE_WECOM_APPID`（数智化助手-测试），agentid `YOUR_COZE_WECOM_AGENTID`，回调 `sso.example.com/callback`
-- 登录检测：轮询浏览器 URL 跳到 `coze.example.com` 后等 12s（SPA 完成 oauth_casdoor_code + 种 cookie），再取 session_key
+- 登录 URL 构造（与 coze 前端一致）：state = base64url(`?client_id=a1a27991a36f92d4f8d6&response_type=code&redirect_uri=<coze>/sign?redirect=%2F&scope=read&state=<随机数>&application=opencoze&provider=企业微信&method=signup`)
+- 企业微信：appid `ww05e5424085f62d37`（数智化助手-测试），agentid `1000354`，回调 `sso.dev1.dachensky.com/callback`
+- 登录检测：轮询浏览器 URL 跳到 `coze.dev1.dachensky.com` 后等 12s（SPA 完成 oauth_casdoor_code + 种 cookie），再取 session_key
 - 保存流程：edit_lock → canvas(拿最新 submit_commit_id) → validate_tree → save（含 777777759/770 自动重试）
 
 ## 依赖

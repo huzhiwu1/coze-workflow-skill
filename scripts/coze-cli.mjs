@@ -41,7 +41,7 @@ function isExpired(cred) {
 
 // ---------- HTTP ----------
 async function call(cred, path, body, prefix = "/api/workflow_api/", method = "POST") {
-  const url = `${cred.origin ?? "https://coze.example.com"}${prefix}${path}`;
+  const url = `${cred.origin ?? "https://coze.dev1.dachensky.com"}${prefix}${path}`;
   const res = await fetch(url, {
     method,
     headers: {
@@ -164,7 +164,7 @@ async function getProcess(cred, wfId, execId) {
     execute_id: execId,
     need_async: "true",
   });
-  const url = `${cred.origin ?? "https://coze.example.com"}/api/workflow_api/get_process?${qs}`;
+  const url = `${cred.origin ?? "https://coze.dev1.dachensky.com"}/api/workflow_api/get_process?${qs}`;
   const res = await fetch(url, {
     headers: {
       Cookie: `session_key=${cred.session_key}`,

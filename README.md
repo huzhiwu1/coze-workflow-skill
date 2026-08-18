@@ -4,26 +4,25 @@
 
 **一句话：扫码登录 → agent 自己创建工作流、改节点、试运行、查数据库，全程不需要你复制任何 token。**
 
-## 快速开始（3 分钟）
+平台连接信息已内置（私有化部署），**使用者零配置**。
+
+## 快速开始（2 分钟）
 
 ```bash
 # 1. 克隆
 git clone https://github.com/YOUR_GITHUB_USER/coze-workflow-skill.git
 cd coze-workflow-skill
 
-# 2. 配置平台连接信息（联系管理员获取）
-cp .env.example .env
-# 编辑 .env 填入你的 COZE_ORIGIN / COZE_SSO_ORIGIN / COZE_CLIENT_ID / COZE_WECOM_APPID / COZE_WECOM_AGENTID
-source .env
-
-# 3. 扫码登录（弹浏览器窗口，企业微信扫码，只需一次）
+# 2. 扫码登录（弹浏览器窗口，企业微信扫码，只需一次）
 node scripts/coze-login.mjs
 # 凭证自动存 ~/.coze/credentials.json（24h 有效，过期重跑即可）
 
-# 4. 验证
+# 3. 验证
 node scripts/coze-cli.mjs status
 # ✅ 已登录（有效期至 ...）
 ```
+
+> 如需覆盖平台连接信息，设置环境变量：`COZE_ORIGIN` / `COZE_SSO_ORIGIN` / `COZE_CLIENT_ID` / `COZE_WECOM_APPID` / `COZE_WECOM_AGENTID`
 
 ## 三种使用方式
 
@@ -109,10 +108,9 @@ coze-workflow-skill/
 ├── README.md                 # 本文件
 ├── SKILL.md                  # OpenClaw Skill 规范（agent 自动读取）
 ├── SHARING.md                # 分享给其他人的详细指引
-├── .env.example              # 平台连接配置模板
 ├── package.json              # MCP 模式依赖（sdk + zod）
 ├── scripts/
-│   ├── coze-login.mjs        # 扫码登录（零依赖）
+│   ├── coze-login.mjs        # 扫码登录（零依赖，平台信息已内置）
 │   └── coze-cli.mjs          # CLI 确定性操作（零依赖）
 ├── src/                      # TS 源码（coze-client / schema-converter / mcp-server）
 ├── dist/
@@ -135,4 +133,4 @@ coze-workflow-skill/
 - **登录报 appid 错误**：agent-browser daemon 残留，先 `agent-browser close --all`
 - **session 过期**：操作报 700012006 → 重新 `node scripts/coze-login.mjs`
 - **创建工作流报 720702089**：LLM 节点结构问题，参考 `examples/` 或 `assets/workflows/` 的真实模板
-- **MCP 连不上**：确认已扫码登录（`~/.coze/credentials.json` 存在）且环境变量已设置
+- **MCP 连不上**：确认已扫码登录（`~/.coze/credentials.json` 存在）

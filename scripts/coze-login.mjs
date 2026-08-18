@@ -9,41 +9,23 @@
  *  4. 提取 httpOnly session_key cookie
  *  5. 解析 JWT payload（user id / 过期时间），存凭证文件
  *
- * 凭证文件：~/.coze/credentials.json（按用户隔离，替代全局 .env COZE_SESSION_KEY）
+ * 凭证文件：~/.coze/credentials.json（按用户隔离，每个用户扫码生成自己的 session_key）
  * 输出：登录成功 → 打印凭证摘要；失败 → 非零退出
  *
- * 配置：通过环境变量设置 Coze 平台连接信息
- *   COZE_ORIGIN         Coze 平台地址（如 https://coze.example.com）
- *   COZE_SSO_ORIGIN     SSO 地址（如 https://sso.example.com）
- *   COZE_CLIENT_ID      Casdoor OAuth client_id
- *   COZE_WECOM_APPID    企业微信应用 appid
- *   COZE_WECOM_AGENTID  企业微信应用 agentid
+ * 平台连接信息已内置（私有化部署，所有用户共用），无需额外配置。
+ * 如需覆盖，设置环境变量：COZE_ORIGIN / COZE_SSO_ORIGIN / COZE_CLIENT_ID / COZE_WECOM_APPID / COZE_WECOM_AGENTID
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
-// 从环境变量读取平台配置（部署时由管理员提供）
-const COZE_ORIGIN = process.env.COZE_ORIGIN;
-const SSO_ORIGIN = process.env.COZE_SSO_ORIGIN;
-const CLIENT_ID = process.env.COZE_CLIENT_ID;
-const WECOM_APPID = process.env.COZE_WECOM_APPID;
-const WECOM_AGENTID = process.env.COZE_WECOM_AGENTID;
-
-function validateConfig() {
-  const missing = [];
-  if (!COZE_ORIGIN) missing.push("COZE_ORIGIN");
-  if (!SSO_ORIGIN) missing.push("COZE_SSO_ORIGIN");
-  if (!CLIENT_ID) missing.push("COZE_CLIENT_ID");
-  if (!WECOM_APPID) missing.push("COZE_WECOM_APPID");
-  if (!WECOM_AGENTID) missing.push("COZE_WECOM_AGENTID");
-  if (missing.length) {
-    console.error(`❌ 缺少环境变量: ${missing.join(", ")}`);
-    console.error("   请设置以上环境变量后再运行。参见 .env.example");
-    process.exit(1);
-  }
-}
+// 平台连接信息（私有化部署，所有用户共用；可用环境变量覆盖）
+const COZE_ORIGIN = process.env.COZE_ORIGIN || "https://coze.dev1.dachensky.com";
+const SSO_ORIGIN = process.env.COZE_SSO_ORIGIN || "https://sso.dev1.dachensky.com";
+const CLIENT_ID = process.env.COZE_CLIENT_ID || "a1a27991a36f92d4f8d6";
+const WECOM_APPID = process.env.COZE_WECOM_APPID || "ww05e5424085f62d37";
+const WECOM_AGENTID = process.env.COZE_WECOM_AGENTID || "1000354";
 
 const SESSION = "coze-login"; // agent-browser session 名
 const POLL_INTERVAL_MS = 3000;
@@ -96,7 +78,6 @@ async function getPersonalSpaceId(key) {
     });
     const json = await res.json();
     const list = json?.data?.bot_space_list ?? [];
-    // 优先 Personal Space（space_type=1 或名字含 Personal），否则取第一个
     const personal = list.find((s) => s.space_type === 1 || /personal/i.test(s.name ?? ""));
     return (personal ?? list[0])?.id ?? "";
   } catch {
@@ -130,8 +111,6 @@ function getSessionKeyFromCookies() {
 }
 
 async function main() {
-  validateConfig();
-
   console.log("🔐 Coze 扫码登录");
   console.log("  - 将弹出浏览器窗口，请用企业微信 App 扫码");
   console.log("  - 凭证保存位置:", CRED_PATH);
