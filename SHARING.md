@@ -9,7 +9,7 @@
 
 ```bash
 # 1. 获取 skill
-git clone https://github.com/YOUR_GITHUB_USER/coze-workflow-skill.git
+git clone https://github.com/huzhiwu1/coze-workflow-skill.git
 cd coze-workflow-skill
 
 # 2. 首次登录（会弹浏览器窗口，企业微信扫码，只需扫一次）
