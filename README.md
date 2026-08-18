@@ -10,7 +10,7 @@
 
 ```bash
 # 1. 克隆
-git clone https://github.com/YOUR_GITHUB_USER/coze-workflow-skill.git
+git clone https://github.com/huzhiwu1/coze-workflow-skill.git
 cd coze-workflow-skill
 
 # 2. 扫码登录（弹浏览器窗口，企业微信扫码，只需一次）
