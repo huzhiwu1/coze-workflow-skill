@@ -1,0 +1,1256 @@
+{
+ "nodes": [
+  {
+   "id": "100001",
+   "type": "1",
+   "meta": {
+    "position": {
+     "x": 180,
+     "y": 352.25
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "开始",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#52c41a",
+     "subTitle": ""
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "x",
+      "required": true
+     }
+    ],
+    "trigger_parameters": []
+   }
+  },
+  {
+   "id": "200101",
+   "type": "43",
+   "meta": {
+    "position": {
+     "x": 1100,
+     "y": 317.05
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "查库",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#eb2f96",
+     "subTitle": "查询数据"
+    },
+    "inputs": {
+     "databaseInfoList": [
+      {
+       "databaseInfoID": "YOUR_DATABASE_ID"
+      }
+     ],
+     "selectParam": {
+      "condition": {
+       "conditionList": [
+        [
+         {
+          "name": "left",
+          "input": {
+           "type": "string",
+           "value": {
+            "type": "literal",
+            "content": "category"
+           }
+          }
+         },
+         {
+          "name": "operation",
+          "input": {
+           "type": "string",
+           "value": {
+            "type": "literal",
+            "content": "EQUAL"
+           }
+          }
+         },
+         {
+          "name": "right",
+          "input": {
+           "type": "string",
+           "value": {
+            "type": "ref",
+            "content": {
+             "source": "block-output",
+             "blockID": "100001",
+             "name": "x"
+            },
+            "rawMeta": {
+             "type": 1
+            }
+           }
+          }
+         }
+        ]
+       ],
+       "logic": "AND"
+      },
+      "orderByList": [],
+      "limit": 100
+     },
+     "settingOnError": {
+      "processType": 1,
+      "timeoutMs": 60000,
+      "retryTimes": 0
+     }
+    },
+    "outputs": [
+     {
+      "type": "list",
+      "name": "outputList",
+      "schema": {
+       "type": "object",
+       "schema": []
+      }
+     },
+     {
+      "type": "integer",
+      "name": "rowNum"
+     }
+    ],
+    "version": "43"
+   }
+  },
+  {
+   "id": "200102",
+   "type": "5",
+   "meta": {
+    "position": {
+     "x": 1560,
+     "y": 338.55
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "代码",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#00B2B2",
+     "subTitle": "代码"
+    },
+    "inputs": {
+     "inputParameters": [
+      {
+       "name": "outputList",
+       "input": {
+        "type": "list",
+        "schema": {
+         "type": "object",
+         "schema": []
+        },
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200101",
+          "name": "outputList"
+         },
+         "rawMeta": {
+          "type": 103
+         }
+        }
+       }
+      }
+     ],
+     "code": "async def main(args: Args) -> Output:\n    output_list = args.params.get(\"outputList\") or []\n    quote = \"\"\n    if isinstance(output_list, list) and len(output_list) > 0:\n        first = output_list[0] if isinstance(output_list[0], dict) else {}\n        quote = str(first.get(\"text\", \"\"))\n    branch = \"long\" if len(quote) > 15 else \"short\"\n    return {\"branch\": branch, \"quote\": quote}",
+     "language": 3,
+     "settingOnError": {
+      "processType": 1,
+      "timeoutMs": 60000,
+      "retryTimes": 0
+     }
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "branch"
+     }
+    ]
+   }
+  },
+  {
+   "id": "200103",
+   "type": "8",
+   "meta": {
+    "position": {
+     "x": 2020,
+     "y": 325.55
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "判断",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#00B2B2",
+     "subTitle": "选择器"
+    },
+    "inputs": {
+     "branches": [
+      {
+       "condition": {
+        "logic": 2,
+        "conditions": [
+         {
+          "operator": 7,
+          "left": {
+           "input": {
+            "type": "string",
+            "value": {
+             "type": "ref",
+             "content": {
+              "source": "block-output",
+              "blockID": "200102",
+              "name": "branch"
+             }
+            }
+           }
+          },
+          "right": {
+           "input": {
+            "type": "string",
+            "value": {
+             "type": "literal",
+             "content": "long",
+             "rawMeta": {
+              "type": 1
+             }
+            }
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "900001",
+   "type": "2",
+   "meta": {
+    "position": {
+     "x": 5240,
+     "y": 454.25000000000006
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "结束",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#faad14",
+     "subTitle": ""
+    },
+    "inputs": {
+     "terminatePlan": "returnVariables",
+     "inputParameters": [
+      {
+       "name": "out",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200106",
+          "name": "concatResult"
+         }
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "200104",
+   "type": "3",
+   "meta": {
+    "position": {
+     "x": 2480,
+     "y": 224.70000000000005
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "解读",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#5C62FF",
+     "subTitle": "大模型"
+    },
+    "inputs": {
+     "inputParameters": [
+      {
+       "name": "branch",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200102",
+          "name": "branch"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "x",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "100001",
+          "name": "x"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "llmParam": [
+      {
+       "name": "temperature",
+       "input": {
+        "type": "float",
+        "value": {
+         "type": "literal",
+         "content": "0.8",
+         "rawMeta": {
+          "type": 4
+         }
+        }
+       }
+      },
+      {
+       "name": "maxTokens",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "2048",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "topP",
+       "input": {
+        "type": "float",
+        "value": {
+         "type": "literal",
+         "content": "0.95",
+         "rawMeta": {
+          "type": 4
+         }
+        }
+       }
+      },
+      {
+       "name": "responseFormat",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "2",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "modleName",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "Doubao-Seed-2.0-Lite",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "modelType",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "201",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "generationDiversity",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "balance",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "supportThinking",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": true,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "enableThinking",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": true,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "apiType",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "1",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "prompt",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "输入是 {{x}}（分支：{{branch}}），请回复\"收到\"。",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "enableChatHistory",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": false,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "chatHistoryRound",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "3",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "systemPrompt",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "你只输出文案正文，不要任何解释说明。",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "settingOnError": {
+      "switch": true,
+      "dataOnErr": "{\"output\":\"\",\"reasoning_content\":\"\"}",
+      "processType": 3,
+      "timeoutMs": 120000,
+      "singleTimeoutMs": 0,
+      "retryTimes": 1,
+      "ext": {
+       "backupLLmParam": "{\"temperature\":1,\"maxTokens\":16384,\"topP\":0.95,\"responseFormat\":2,\"modelName\":\"Doubao-Seed-2.0-Lite\",\"modelType\":201,\"generationDiversity\":\"default_val\"}"
+      }
+     }
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "output"
+     },
+     {
+      "type": "string",
+      "name": "reasoning_content"
+     },
+     {
+      "type": "object",
+      "name": "errorBody",
+      "schema": [
+       {
+        "type": "string",
+        "name": "errorMessage",
+        "readonly": true
+       },
+       {
+        "type": "string",
+        "name": "errorCode",
+        "readonly": true
+       }
+      ],
+      "readonly": true
+     },
+     {
+      "type": "boolean",
+      "name": "isSuccess",
+      "readonly": true
+     }
+    ],
+    "version": "3"
+   }
+  },
+  {
+   "id": "200105",
+   "type": "3",
+   "meta": {
+    "position": {
+     "x": 2940,
+     "y": 22.YOUR_PLUGIN_ID
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "润色",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#5C62FF",
+     "subTitle": "大模型"
+    },
+    "inputs": {
+     "inputParameters": [
+      {
+       "name": "copy",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200104",
+          "name": "output"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "llmParam": [
+      {
+       "name": "temperature",
+       "input": {
+        "type": "float",
+        "value": {
+         "type": "literal",
+         "content": "0.8",
+         "rawMeta": {
+          "type": 4
+         }
+        }
+       }
+      },
+      {
+       "name": "maxTokens",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "2048",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "topP",
+       "input": {
+        "type": "float",
+        "value": {
+         "type": "literal",
+         "content": "0.95",
+         "rawMeta": {
+          "type": 4
+         }
+        }
+       }
+      },
+      {
+       "name": "responseFormat",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "2",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "modleName",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "Doubao-Seed-2.0-Lite",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "modelType",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "201",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "generationDiversity",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "balance",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "supportThinking",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": true,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "enableThinking",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": true,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "apiType",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "1",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "prompt",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "润色：{{copy}}",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "enableChatHistory",
+       "input": {
+        "type": "boolean",
+        "value": {
+         "type": "literal",
+         "content": false,
+         "rawMeta": {
+          "type": 3
+         }
+        }
+       }
+      },
+      {
+       "name": "chatHistoryRound",
+       "input": {
+        "type": "integer",
+        "value": {
+         "type": "literal",
+         "content": "3",
+         "rawMeta": {
+          "type": 2
+         }
+        }
+       }
+      },
+      {
+       "name": "systemPrompt",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "你只输出文案正文，不要任何解释说明。",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "settingOnError": {
+      "switch": true,
+      "dataOnErr": "{\"output\":\"\",\"reasoning_content\":\"\"}",
+      "processType": 3,
+      "timeoutMs": 120000,
+      "singleTimeoutMs": 0,
+      "retryTimes": 1,
+      "ext": {
+       "backupLLmParam": "{\"temperature\":1,\"maxTokens\":16384,\"topP\":0.95,\"responseFormat\":2,\"modelName\":\"Doubao-Seed-2.0-Lite\",\"modelType\":201,\"generationDiversity\":\"default_val\"}"
+      }
+     }
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "output"
+     },
+     {
+      "type": "string",
+      "name": "reasoning_content"
+     },
+     {
+      "type": "object",
+      "name": "errorBody",
+      "schema": [
+       {
+        "type": "string",
+        "name": "errorMessage",
+        "readonly": true
+       },
+       {
+        "type": "string",
+        "name": "errorCode",
+        "readonly": true
+       }
+      ],
+      "readonly": true
+     },
+     {
+      "type": "boolean",
+      "name": "isSuccess",
+      "readonly": true
+     }
+    ],
+    "version": "3"
+   }
+  },
+  {
+   "id": "200106",
+   "type": "15",
+   "meta": {
+    "position": {
+     "x": 4780,
+     "y": 1.0000000000000142
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "格式化",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#3071F2",
+     "subTitle": "文本处理"
+    },
+    "inputs": {
+     "method": "concat",
+     "inputParameters": [
+      {
+       "name": "String1",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200113",
+          "name": "body"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "concatParams": [
+      {
+       "name": "concatResult",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "【AI】{{String1}}",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "arrayItemConcatChar",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "literal",
+         "content": "，",
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      },
+      {
+       "name": "allArrayItemConcatChars",
+       "input": {
+        "type": "list",
+        "schema": {
+         "type": "object",
+         "schema": [
+          {
+           "type": "string",
+           "name": "label",
+           "required": true
+          },
+          {
+           "type": "string",
+           "name": "value",
+           "required": true
+          },
+          {
+           "type": "boolean",
+           "name": "isDefault",
+           "required": true
+          }
+         ]
+        },
+        "value": {
+         "type": "literal",
+         "content": [
+          {
+           "label": "换行",
+           "value": "\\n",
+           "isDefault": true
+          }
+         ]
+        }
+       }
+      }
+     ]
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "concatResult"
+     }
+    ]
+   }
+  },
+  {
+   "id": "200107",
+   "type": "31",
+   "meta": {
+    "position": {
+     "x": 2940,
+     "y": 305.25
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "注释",
+     "icon": "comment_icon",
+     "description": "AI文案工厂",
+     "mainColor": "#8c8c8c",
+     "subTitle": "注释"
+    },
+    "size": {
+     "width": 240,
+     "height": 150
+    },
+    "inputs": {
+     "schemaType": "slate",
+     "note": "[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]"
+    }
+   }
+  },
+  {
+   "id": "200112",
+   "type": "9",
+   "meta": {
+    "position": {
+     "x": 3400,
+     "y": 1.0000000000000142
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "子流程",
+     "icon": "",
+     "description": "子工作流：单条文案生成",
+     "mainColor": "#00B2B2",
+     "subTitle": ""
+    },
+    "inputs": {
+     "workflowId": "YOUR_SUB_WORKFLOW_ID",
+     "spaceId": "YOUR_SPACE_ID",
+     "workflowVersion": "v0.0.1",
+     "inputDefs": [
+      {
+       "name": "material",
+       "type": "string",
+       "required": true
+      }
+     ],
+     "type": 0,
+     "inputParameters": [
+      {
+       "name": "material",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200105",
+          "name": "output"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "settingOnError": {}
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "result"
+     }
+    ]
+   }
+  },
+  {
+   "id": "200111",
+   "type": "5",
+   "meta": {
+    "position": {
+     "x": 3860,
+     "y": 1.0000000000000142
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "承接子流程",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#00B2B2",
+     "subTitle": "代码"
+    },
+    "inputs": {
+     "inputParameters": [
+      {
+       "name": "sub_out",
+       "input": {
+        "type": "string",
+        "value": {
+         "type": "ref",
+         "content": {
+          "source": "block-output",
+          "blockID": "200112",
+          "name": "result"
+         },
+         "rawMeta": {
+          "type": 1
+         }
+        }
+       }
+      }
+     ],
+     "code": "async def main(args: Args) -> Output:\n    v = args.params.get(\"sub_out\") or {}\n    if isinstance(v, dict):\n        return {\"text\": str(v.get(\"result\", v))}\n    return {\"text\": str(v)}",
+     "language": 3,
+     "settingOnError": {
+      "processType": 1,
+      "timeoutMs": 60000,
+      "retryTimes": 0
+     }
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "text"
+     }
+    ]
+   }
+  },
+  {
+   "id": "200113",
+   "type": "45",
+   "meta": {
+    "position": {
+     "x": 4320,
+     "y": 1.YOUR_DATABASE_IDe-14
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "HTTP请求",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "",
+     "mainColor": "#00B2B2",
+     "subTitle": "HTTP 请求"
+    },
+    "inputParameters": [],
+    "inputs": {
+     "apiInfo": {
+      "method": "GET",
+      "url": "https://httpbin.org/get"
+     },
+     "body": {
+      "bodyType": "EMPTY",
+      "bodyData": {
+       "binary": {
+        "fileURL": {
+         "type": "string",
+         "value": {
+          "type": "ref",
+          "content": {
+           "source": "block-output",
+           "blockID": "",
+           "name": ""
+          }
+         }
+        }
+       }
+      }
+     },
+     "headers": [],
+     "params": [],
+     "auth": {
+      "authType": "BEARER_AUTH",
+      "authData": {
+       "customData": {
+        "addTo": "header"
+       }
+      },
+      "authOpen": false
+     },
+     "setting": {
+      "timeout": 30,
+      "retryTimes": 1
+     },
+     "settingOnError": {}
+    },
+    "outputs": [
+     {
+      "type": "string",
+      "name": "body"
+     },
+     {
+      "type": "integer",
+      "name": "statusCode"
+     },
+     {
+      "type": "string",
+      "name": "headers"
+     }
+    ],
+    "settingOnError": {}
+   }
+  },
+  {
+   "id": "195640",
+   "type": "1001",
+   "meta": {
+    "position": {
+     "x": 640,
+     "y": 348.55
+    }
+   },
+   "data": {
+    "nodeMeta": {
+     "title": "延迟定时器",
+     "icon": "https://cdn.example.com/icon-placeholder",
+     "description": "通过设定延迟时间，延迟若干时间执行一系列任务",
+     "mainColor": "#FF811A",
+     "subTitle": "延迟定时器"
+    },
+    "inputs": {
+     "timerParam": {
+      "duration": 0,
+      "delay_duration": {
+       "type": "literal",
+       "content": 1,
+       "rawMeta": {
+        "type": 2
+       }
+      },
+      "mode": "delay",
+      "duration_unit": "m",
+      "timer_format": ""
+     }
+    }
+   }
+  }
+ ],
+ "edges": [
+  {
+   "sourceNodeID": "100001",
+   "targetNodeID": "195640"
+  },
+  {
+   "sourceNodeID": "195640",
+   "targetNodeID": "200101"
+  },
+  {
+   "sourceNodeID": "200101",
+   "targetNodeID": "200102"
+  },
+  {
+   "sourceNodeID": "200102",
+   "targetNodeID": "200103"
+  },
+  {
+   "sourceNodeID": "200103",
+   "targetNodeID": "200104",
+   "sourcePortID": "true"
+  },
+  {
+   "sourceNodeID": "200103",
+   "targetNodeID": "900001",
+   "sourcePortID": "false"
+  },
+  {
+   "sourceNodeID": "200104",
+   "targetNodeID": "900001",
+   "sourcePortID": "branch_error"
+  },
+  {
+   "sourceNodeID": "200105",
+   "targetNodeID": "900001",
+   "sourcePortID": "branch_error"
+  },
+  {
+   "sourceNodeID": "200106",
+   "targetNodeID": "900001"
+  },
+  {
+   "sourceNodeID": "200104",
+   "targetNodeID": "200105",
+   "sourcePortID": "default"
+  },
+  {
+   "sourceNodeID": "200105",
+   "targetNodeID": "200112",
+   "sourcePortID": "default"
+  },
+  {
+   "sourceNodeID": "200113",
+   "targetNodeID": "200106"
+  },
+  {
+   "sourceNodeID": "200112",
+   "targetNodeID": "200111"
+  },
+  {
+   "sourceNodeID": "200111",
+   "targetNodeID": "200113"
+  }
+ ],
+ "versions": {
+  "loop": "v2"
+ }
+}

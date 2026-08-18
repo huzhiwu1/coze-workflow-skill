@@ -1,0 +1,101 @@
+{
+  "_comment": "批处理 LLM 校验代码节点参考模板 - 来自健康食养生产工作流（28天食谱校验）",
+  "_source": "workflowId=YOUR_DATABASE_ID, 节点200105, 胡志武线上导出, 2026-08-18",
+  "_pattern": "批处理 LLM 标配链：LLM(3, batch) → Code(5, validator)",
+  "node": {
+    "id": "200105",
+    "type": "5",
+    "meta": {
+      "position": { "x": 5700, "y": 540.9 }
+    },
+    "data": {
+      "nodeMeta": {
+        "title": "校验单日食谱",
+        "icon": "https://cdn.example.com/icon-placeholder",
+        "description": "编写代码，处理输入变量来生成返回值",
+        "mainColor": "#00B2B2",
+        "subTitle": "代码"
+      },
+      "inputs": {
+        "inputParameters": [
+          {
+            "name": "outputList",
+            "input": {
+              "type": "list",
+              "schema": {
+                "type": "object",
+                "schema": [
+                  { "type": "integer", "name": "day_no" },
+                  { "type": "string", "name": "dayLabel" },
+                  {
+                    "type": "object",
+                    "name": "meals",
+                    "schema": [
+                      { "type": "string", "name": "MORNING" },
+                      { "type": "string", "name": "BREAKFAST" },
+                      { "type": "string", "name": "LUNCH" },
+                      { "type": "string", "name": "DINNER" }
+                    ]
+                  },
+                  { "type": "list", "name": "usedIngredients", "schema": { "type": "string" } },
+                  { "type": "list", "name": "adjustmentNotes", "schema": { "type": "string" } },
+                  {
+                    "type": "object",
+                    "name": "errorBody",
+                    "schema": [
+                      { "type": "string", "name": "errorMessage", "readonly": true },
+                      { "type": "string", "name": "errorCode", "readonly": true }
+                    ],
+                    "readonly": true
+                  },
+                  { "type": "boolean", "name": "isSuccess", "readonly": true }
+                ]
+              },
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "200104A", "name": "outputList" },
+                "rawMeta": { "type": 103 }
+              }
+            }
+          }
+        ],
+        "code": "import json\nimport re\n\nREQUIRED_MEALS = [\"MORNING\", \"BREAKFAST\", \"LUNCH\", \"DINNER\"]\n\n\ndef normalize_day_no(day_no, fallback):\n    \"\"\"把各种 day_no 写法规范化为整数\"\"\"\n    if isinstance(day_no, int):\n        return day_no\n    if isinstance(day_no, float):\n        return int(day_no)\n    try:\n        return int(str(day_no).strip())\n    except (TypeError, ValueError):\n        pass\n    m = re.search(r\"\\d+\", str(day_no))\n    if m:\n        return int(m.group())\n    return fallback\n\n\ndef parse_day_recipe_json(raw):\n    \"\"\"清洗并解析 LLM 输出的 day_recipe_json，兼容 Markdown 围栏和多余文本\"\"\"\n    if not isinstance(raw, str):\n        return raw\n    text = raw.strip()\n    if text.startswith(\"```\"):\n        text = text.strip(\"`\")\n        if text.lower().startswith(\"json\"):\n            text = text[4:]\n        text = text.strip()\n    start = text.find(\"{\")\n    end = text.rfind(\"}\")\n    if start >= 0 and end > start:\n        text = text[start:end + 1]\n    try:\n        return json.loads(text)\n    except Exception:\n        # 尝试修复被截断的 JSON\n        fixed = fix_truncated_recipe_json(text)\n        if fixed is not None:\n            return fixed\n        raise\n\n\ndef fix_truncated_recipe_json(text):\n    \"\"\"修复 LLM 输出的被截断食谱 JSON\"\"\"\n    text = text.strip()\n\n    # 场景 1：截断在 DINNER 字段或更后面，已有完整 MORNING/BREAKFAST/LUNCH/DINNER\n    dinner_match = re.search(r'\"DINNER\"\\s*:\\s*\"([^\"]*)\"', text)\n    if dinner_match:\n        dinner_end = dinner_match.end()\n        fixed = text[:dinner_end] + ', \"usedIngredients\": [], \"adjustmentNotes\": []}'\n        try:\n            return json.loads(fixed)\n        except Exception:\n            pass\n\n    # 场景 2：截断在某个字符串值中间，尝试用更通用的方式补全 meals 后结构\n    last_match = None\n    for pattern in [r'\"([A-Z]+)\"\\s*:\\s*\"([^\"]*)\"', r'\"([A-Z]+)\"\\s*:\\s*\\[([^\\]]*)\\]']:\n        for m in re.finditer(pattern, text):\n            last_match = m\n    if last_match and last_match.end() < len(text):\n        fixed = text[:last_match.end()] + ', \"usedIngredients\": [], \"adjustmentNotes\": []}'\n        try:\n            return json.loads(fixed)\n        except Exception:\n            pass\n\n    return None\n\n\ndef extract_raw_from_item(item):\n    \"\"\"从上游 item 中提取食谱 raw，兼容包装结构和直接对象\"\"\"\n    if not isinstance(item, dict):\n        return item\n    # 如果 item 本身就是食谱对象（包含 meals），直接返回\n    if \"meals\" in item:\n        return item\n    # 优先取 day_recipe_json（JSON 字符串）\n    if item.get(\"day_recipe_json\") not in (None, \"\"):\n        return item.get(\"day_recipe_json\")\n    # 尝试其他常见字段\n    for key in [\"output\", \"result\", \"content\", \"data\"]:\n        if item.get(key) not in (None, \"\"):\n            return item.get(key)\n    return None\n\n\nasync def main(args: Args) -> Output:\n    params = args.params\n    output_list = params.get(\"outputList\") or []\n\n    debug_logs = []\n\n    def log(step, info):\n        debug_logs.append({\"step\": step, \"info\": info})\n\n    log(\"input_type\", {\"output_list_type\": type(output_list).__name__, \"is_list\": isinstance(output_list, list)})\n\n    # 兼容：参数声明为 string 时，Coze 会把上游 list 序列化为 JSON 字符串传入\n    if isinstance(output_list, str):\n        log(\"input_is_string\", {\"length\": len(output_list), \"preview\": output_list[:200]})\n        try:\n            output_list = json.loads(output_list)\n            log(\"parsed_string\", {\"parsed_type\": type(output_list).__name__})\n        except Exception as exc:\n            log(\"parse_string_error\", {\"error\": str(exc)})\n            output_list = []\n    if not isinstance(output_list, list):\n        log(\"input_not_list\", {\"type\": type(output_list).__name__})\n        output_list = []\n\n    valid_days = []\n    failed_days = []\n    errors = []\n\n    for index, item in enumerate(output_list):\n        item_type = type(item).__name__\n        item_keys = list(item.keys()) if isinstance(item, dict) else None\n        log(f\"item_{index}_start\", {\"item_type\": item_type, \"item_keys\": item_keys})\n\n        raw = extract_raw_from_item(item)\n        raw_type = type(raw).__name__\n        raw_preview = str(raw)[:300]\n        log(f\"item_{index}_raw\", {\"raw_type\": raw_type, \"raw_preview\": raw_preview})\n\n        if raw in (None, \"\", {}):\n            failed_days.append(index + 1)\n            err = {\n                \"index\": index + 1,\n                \"error\": \"day_recipe_json 为空\",\n                \"item_type\": item_type,\n                \"item_keys\": item_keys,\n            }\n            errors.append(err)\n            log(f\"item_{index}_empty\", err)\n            continue\n\n        try:\n            obj = parse_day_recipe_json(raw)\n            log(f\"item_{index}_parsed\", {\"obj_type\": type(obj).__name__, \"keys\": list(obj.keys())[:20] if isinstance(obj, dict) else None})\n\n            if not isinstance(obj, dict):\n                raise ValueError(\"不是有效的 JSON 对象，类型：\" + type(obj).__name__)\n\n            # 加固1：检测兜底/失败标记，防止\"假成功\"（dataOnErr 兜底或模型输出失败文案）\n            raw_text = str(raw)\n            if any(mark in raw_text for mark in [\"生成失败\", \"请重新生成\", \"默认兜底\"]):\n                raise ValueError(\"检测到兜底/失败标记，视为生成失败\")\n\n            # 加固2：item 自带 isSuccess=false 时判失败\n            if isinstance(item, dict) and item.get(\"isSuccess\") is False:\n                raise ValueError(\"批处理项 isSuccess=false\")\n\n            # 加固3：强制使用批处理顺序编号，不信 LLM 输出的 day_no（防幻觉/兜底错号）\n            day_no = index + 1\n            obj[\"day_no\"] = day_no\n\n            day_label = obj.get(\"dayLabel\") or obj.get(\"day_label\") or \"\"\n            # 优先用数据库记录的 day_label，保证与 day_no 对齐\n            base_label = item.get(\"day_label\") if isinstance(item, dict) else None\n            if base_label:\n                day_label = base_label\n            else:\n                m = re.search(r\"\\d+\", str(day_label))\n                if m and int(m.group()) != day_no:\n                    day_label = f\"Day{day_no}\"\n            obj[\"dayLabel\"] = day_label\n\n            meals = obj.get(\"meals\") or {}\n            log(f\"item_{index}_meals\", {\"meals_type\": type(meals).__name__, \"meals_keys\": list(meals.keys()) if isinstance(meals, dict) else None})\n\n            missing = [k for k in REQUIRED_MEALS if k not in meals]\n            if missing:\n                raise ValueError(\"缺少餐次：\" + \",\".join(missing))\n            if not meals.get(\"BREAKFAST\") or not meals.get(\"LUNCH\") or not meals.get(\"DINNER\"):\n                raise ValueError(\"早餐、午餐或晚餐为空\")\n\n            valid_days.append(obj)\n            log(f\"item_{index}_success\", {\"day_no\": day_no, \"day_label\": day_label})\n        except Exception as exc:\n            failed_days.append(index + 1)\n            err = {\n                \"index\": index + 1,\n                \"error\": str(exc),\n                \"item_type\": item_type,\n                \"raw_type\": raw_type,\n                \"raw_preview\": raw_preview,\n            }\n            errors.append(err)\n            log(f\"item_{index}_error\", err)\n\n    ok = (len(valid_days) == 28) and (not failed_days)\n    status = \"SUCCESS\" if ok else \"FAILED\"\n    result = {\n        \"status\": status,\n        \"is_success\": ok,\n        \"valid_days\": {\"items\": valid_days},\n        \"failed_days\": \",\".join(str(x) for x in failed_days),\n        \"errors\": {\"items\": errors},\n        \"completed_days\": str(len(valid_days)),\n        \"total_days\": \"28\",\n        \"debug_logs\": {\"items\": debug_logs}\n    }\n    log(\"final_result\", {\"completed_days\": len(valid_days), \"failed_count\": len(failed_days)})\n    return result\n",
+        "language": 3,
+        "settingOnError": {
+          "processType": 1,
+          "timeoutMs": 60000,
+          "retryTimes": 0
+        }
+      },
+      "outputs": [
+        { "type": "string", "name": "status" },
+        { "type": "object", "name": "valid_days", "schema": [] },
+        { "type": "string", "name": "failed_days" },
+        { "type": "object", "name": "errors", "schema": [] },
+        { "type": "string", "name": "completed_days" },
+        { "type": "string", "name": "total_days" },
+        { "type": "boolean", "name": "is_success" },
+        { "type": "object", "name": "debug_logs", "schema": [] }
+      ]
+    }
+  },
+  "_pattern_explanation": {
+    "why_code_node": "批处理 LLM 有概率个别项失败（幻觉/截断/兜底），必须紧跟 code 校验节点",
+    "six_steps": [
+      "1. 兼容输入类型：上游可能传 list 或 JSON 字符串 → isinstance 判断",
+      "2. 清洗 Markdown 围栏：LLM 可能输出 ```json ... ``` → strip + find",
+      "3. 修复截断 JSON：LLM 输出被 maxTokens 截断 → 正则找最后一个完整 key-value",
+      "4. 检测兜底标记：失败项走 dataOnErr 兜底 → 搜'生成失败'/'默认兜底'/isSuccess=false",
+      "5. 强制序号覆盖：不信 LLM 输出的 day_no → index + 1 批处理顺序编号",
+      "6. 校验必填字段：餐次不能为空 → REQUIRED_MEALS 检查"
+    ],
+    "output_contract": {
+      "status": "SUCCESS | FAILED",
+      "is_success": "boolean, 全部 28 天通过才 true",
+      "valid_days": "object.items: 通过校验的食谱列表",
+      "failed_days": "string, 逗号分隔失败天序号",
+      "errors": "object.items: 每个失败项的详细错误信息",
+      "debug_logs": "object.items: 每步日志（失败定位靠它）"
+    }
+  }
+}

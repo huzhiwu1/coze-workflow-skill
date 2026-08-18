@@ -1,0 +1,186 @@
+{
+  "_comment": "批处理 LLM 节点参考模板 - 来自健康食养生产工作流（28天食谱生成）",
+  "_source": "workflowId=YOUR_DATABASE_ID, 胡志武线上导出, 2026-08-18",
+  "node": {
+    "id": "200104A",
+    "type": "3",
+    "meta": {
+      "position": { "x": 5240, "y": 514.9 }
+    },
+    "data": {
+      "nodeMeta": {
+        "title": "生成28天单日食谱",
+        "icon": "https://cdn.example.com/icon-placeholder",
+        "description": "调用大语言模型,使用变量和提示词生成回复",
+        "mainColor": "#5C62FF",
+        "subTitle": "大模型"
+      },
+      "inputs": {
+        "inputParameters": [
+          {
+            "name": "profile_json",
+            "input": {
+              "type": "object",
+              "schema": [],
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "200101", "name": "profile_json" },
+                "rawMeta": { "type": 6 }
+              }
+            }
+          },
+          {
+            "name": "report_json",
+            "input": {
+              "type": "string",
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "105094", "name": "report" },
+                "rawMeta": { "type": 1 }
+              }
+            }
+          },
+          {
+            "name": "recipe_set_id",
+            "input": {
+              "type": "string",
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "200102", "name": "recipe_set_id" },
+                "rawMeta": { "type": 1 }
+              }
+            }
+          },
+          {
+            "name": "micro_adjustment_tags",
+            "input": {
+              "type": "string",
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "200102", "name": "micro_adjustment_tags" },
+                "rawMeta": { "type": 1 }
+              }
+            }
+          },
+          {
+            "name": "item1",
+            "input": {
+              "type": "object",
+              "schema": [],
+              "value": {
+                "type": "ref",
+                "content": { "source": "block-output", "blockID": "200104A", "name": "item1" },
+                "rawMeta": { "type": 6 }
+              }
+            }
+          }
+        ],
+        "llmParam": [
+          { "name": "generationDiversity", "input": { "type": "string", "value": { "type": "literal", "content": "default_val" } } },
+          { "name": "temperature", "input": { "type": "float", "value": { "type": "literal", "content": "0.3" } } },
+          { "name": "maxTokens", "input": { "type": "integer", "value": { "type": "literal", "content": "4096" } } },
+          { "name": "topP", "input": { "type": "float", "value": { "type": "literal", "content": "0.7" } } },
+          { "name": "responseFormat", "input": { "type": "integer", "value": { "type": "literal", "content": "2" } } },
+          { "name": "modleName", "input": { "type": "string", "value": { "type": "literal", "content": "Deepseek-V4-Flash-VolcEngine" } } },
+          { "name": "modelType", "input": { "type": "integer", "value": { "type": "literal", "content": "280" } } },
+          { "name": "supportThinking", "input": { "type": "boolean", "value": { "type": "literal", "content": true } } },
+          { "name": "enableThinking", "input": { "type": "boolean", "value": { "type": "literal", "content": true } } },
+          {
+            "name": "prompt",
+            "input": {
+              "type": "string",
+              "value": {
+                "type": "literal",
+                "content": "当天基础食谱：\n{{item1}}\n\n用户结构化信息：\n{{profile_json}}\n\n体检报告摘要：\n{{report_json}}\n\n当前套系：\n{{recipe_set_id}}\n\n微调标签：\n{{micro_adjustment_tags}}\n\n请严格输出以下 JSON（只输出一个 JSON 对象，不要输出数组、Markdown 围栏或解释文字）：\n{\n  \"day_no\": 1,\n  \"dayLabel\": \"Day1（周一）\",\n  \"meals\": {\n    \"MORNING\": \"\",\n    \"BREAKFAST\": \"\",\n    \"LUNCH\": \"\",\n    \"DINNER\": \"\"\n  },\n  \"usedIngredients\": [],\n  \"adjustmentNotes\": []\n}\n\n要求：\n1. day_no 和 dayLabel 必须根据当天基础食谱中的实际日期生成\n2. MORNING、BREAKFAST、LUNCH、DINNER 必须有内容\n3. 每个食材尽量保留克数或数量\n4. 只输出 JSON，不要 Markdown 代码块、不要解释\n5. 字段名必须与示例完全一致（usedIngredients 的 I 大写、adjustmentNotes 的 N 大写）\n6. 所有字符串值使用双引号，JSON 必须可被 json.loads 解析\n7. meals 内每餐内容必须以 ▶ 开头逐行列出，严禁输出 Markdown 标题"
+              }
+            }
+          },
+          { "name": "enableChatHistory", "input": { "type": "boolean", "value": { "type": "literal", "content": false } } },
+          { "name": "chatHistoryRound", "input": { "type": "integer", "value": { "type": "literal", "content": "3" } } },
+          {
+            "name": "systemPrompt",
+            "input": {
+              "type": "string",
+              "value": {
+                "type": "literal",
+                "content": "你是具备慢病临床营养调理经验的专业营养师，核心任务是基于给定的「基础单日食谱」，结合用户身体画像（慢病、过敏、食物不耐受、饮食禁忌、体重情况、就餐场景），生成适配该用户的个性化单日食谱，严格遵循以下规则，优先级从高到低：\n\n### 一、核心红线规则（违反即错误）\n1. 严格保留基础食谱原有餐次结构、各餐对应食材克重；替换遵循「同品类、等重量、营养等价」原则\n2. 严禁引入用户明确标注的过敏、忌口、不耐受食材\n3. 所有调整必须符合临床营养规范\n\n### 二、重复规避规则\n1. 周维度管控：同一餐次内食材重复率不超过20%\n2. 同食材不同形态判定为重复：番茄/圣女果、土豆/土豆片/土豆丝等视为同一食材\n3. 同餐同类禁重复：同一餐内禁止同大类食材叠加\n\n### 三、分人群精准替换细则\n（一）慢病类：糖尿病/高血压/高血脂/高尿酸/慢性胃炎/甲状腺疾病，各有专属替换规则\n（二）过敏与饮食禁忌类：过敏食材等重量替换为安全食材\n（三）体重管理类：增重/减重各有主食比例+油脂管控策略\n（四）就餐场景适配：食堂/外卖/无烹饪条件\n\n### 四、输出规范\n仅输出标准JSON格式，不得输出任何解释、说明、Markdown格式、代码围栏"
+              }
+            }
+          }
+        ],
+        "batch": {
+          "batchEnable": true,
+          "batchSize": 28,
+          "concurrentSize": 8,
+          "inputLists": [
+            {
+              "name": "item1",
+              "input": {
+                "type": "list",
+                "schema": { "type": "object", "schema": [] },
+                "value": {
+                  "type": "ref",
+                  "content": { "source": "block-output", "blockID": "200201", "name": "outputList" },
+                  "rawMeta": { "type": 103 }
+                }
+              }
+            }
+          ]
+        },
+        "settingOnError": {
+          "switch": true,
+          "dataOnErr": "{\"day_no\": 1, \"dayLabel\": \"DayN（默认兜底）\", \"meals\": {\"MORNING\": \"温水200ml\", \"BREAKFAST\": \"生成失败，请重新生成\", \"LUNCH\": \"生成失败，请重新生成\", \"DINNER\": \"生成失败，请重新生成\"}, \"usedIngredients\": [], \"adjustmentNotes\": [\"该日食谱由兜底数据填充，请重新生成或手动调整\"]}",
+          "processType": 1,
+          "timeoutMs": 600000,
+          "singleTimeoutMs": 90000,
+          "retryTimes": 1,
+          "ext": {
+            "backupLLmParam": "{\"temperature\":1,\"maxTokens\":4096,\"topP\":0.95,\"responseFormat\":2,\"modelName\":\"Doubao-Seed-2.0-pro\",\"modelType\":200,\"generationDiversity\":\"default_val\"}"
+          }
+        }
+      },
+      "outputs": [
+        {
+          "type": "list",
+          "name": "outputList",
+          "schema": {
+            "type": "object",
+            "schema": [
+              { "type": "integer", "name": "day_no" },
+              { "type": "string", "name": "dayLabel" },
+              {
+                "type": "object",
+                "name": "meals",
+                "schema": [
+                  { "type": "string", "name": "MORNING" },
+                  { "type": "string", "name": "BREAKFAST" },
+                  { "type": "string", "name": "LUNCH" },
+                  { "type": "string", "name": "DINNER" }
+                ]
+              },
+              { "type": "list", "name": "usedIngredients", "schema": { "type": "string" } },
+              { "type": "list", "name": "adjustmentNotes", "schema": { "type": "string" } },
+              {
+                "type": "object",
+                "name": "errorBody",
+                "schema": [
+                  { "type": "string", "name": "errorMessage", "readonly": true },
+                  { "type": "string", "name": "errorCode", "readonly": true }
+                ],
+                "readonly": true
+              },
+              { "type": "boolean", "name": "isSuccess", "readonly": true }
+            ]
+          }
+        }
+      ],
+      "version": "3"
+    }
+  },
+  "_batch_flow": {
+    "description": "完整数据流：200202（清洗基础食谱标题）→ 200104A（LLM 批处理，28天批量生成）→ 200105（代码校验：去Markdown/查兜底/isSuccess判定/强制序号覆盖）",
+    "upstream": "200202 清洗基础食谱标题 → outputList → 200201（数据库查询输出基础食谱列表）→ 200104A 的 batch.inputLists",
+    "downstream": "200104A outputList → 200105 校验单日食谱（type5 code）",
+    "edges": ["200202→200104A", "200104A→200105"]
+  }
+}
